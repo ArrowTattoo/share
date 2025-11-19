@@ -249,7 +249,7 @@ end
 
 # 4. 解决单个文件的函数
 function resoudreSPP(fname)
-    file_path = "dat/" * fname
+    file_path = "Data/" * fname
     
     # 简单的检查文件存不存在
     if isfile(file_path) == false
@@ -281,12 +281,12 @@ end
 
 # 5. 批量跑所有测试
 function experimentationSPP()
-    if isdir("data") == false
+    if isdir("Data") == false
         println("错误: 没有 data 文件夹")
         return
     end
 
-    files = getfname("data")
+    files = getfname("Data")
     if length(files) == 0
         println("data 文件夹是空的")
         return
@@ -296,7 +296,7 @@ function experimentationSPP()
     println("-"^50)
     
     for f in files
-        C, A = loadSPP("dat/" * f)
+        C, A = loadSPP("Data/" * f)
         
         t1 = time()
         x0, z0 = randomized_greedy_construction(C, A, 0.75)
