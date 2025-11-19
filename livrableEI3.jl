@@ -1,26 +1,4 @@
-# =========================================================================== #
-#                      livrableEI3.jl (高级遗传算法版)
-#
-#   EI3: Battle of metaheuristics
-#   算法: 遗传算法 (GA) + 逻辑运算交叉 + 贪婪修复 + 局部搜索
-#   
-#   更新说明:
-#   1. 引入了基于价值排序的 "Greedy Repair" (贪婪修复)
-#   2. 引入了 XOR 和 AND 作为交叉算子
-# =========================================================================== #
-
-println("正在加载 EI1 的功能 (为了复用代码)...")
-try
-    # 我们直接包含 EI1，这样就可以使用:
-    # 1. randomized_greedy_construction (用于初始化)
-    # 2. local_search (用于改进子代)
-    include("livrableEI1.jl") 
-catch e
-    println("[错误] 找不到 'livrableEI1.jl'。请确保它在同一个文件夹里。")
-    rethrow(e)
-end
-
-using Random # 需要用到随机数
+using Random
 
 # --------------------------------------------------------------------------- #
 #   1. 贪婪修复函数 (Greedy Repair) - [核心改进]
@@ -82,15 +60,7 @@ function greedy_repair(x_input, A, C)
     return x_new
 end
 
-# --------------------------------------------------------------------------- #
-#   2. 逻辑运算交叉算子 (Logical Operators) - [核心改进]
-#      逻辑参考 GA_SPP_NEW.jl 
-# --------------------------------------------------------------------------- #
 
-"""
-    crossover_standard(p1, p2)
-    标准单点交叉
-"""
 function crossover_standard(p1, p2)
     n = length(p1)
     point = rand(2:n-1)
@@ -106,12 +76,7 @@ function crossover_standard(p1, p2)
     return child
 end
 
-"""
-    crossover_XOR(p1, p2)
-    逻辑异或 (XOR) 运算。
-    如果父母不一样，孩子就是 1；如果一样(都是0或都是1)，孩子是 0。
-    这有助于探索差异。
-"""
+
 function crossover_XOR(p1, p2)
     n = length(p1)
     child = zeros(Int, n)
@@ -126,12 +91,7 @@ function crossover_XOR(p1, p2)
     return child
 end
 
-"""
-    crossover_AND(p1, p2)
-    逻辑与 (AND) 运算。
-    只有父母同时也选了这个变量，孩子才选。
-    这有助于保留共同的优秀基因。
-"""
+
 function crossover_AND(p1, p2)
     n = length(p1)
     child = zeros(Int, n)
@@ -145,13 +105,7 @@ function crossover_AND(p1, p2)
     return child
 end
 
-# --------------------------------------------------------------------------- #
-#   3. 遗传算法主函数 (Genetic Algorithm)
-# --------------------------------------------------------------------------- #
 
-"""
-    genetic_algorithm_SPP(C, A, max_time)
-"""
 function genetic_algorithm_SPP(C, A, max_time=10.0)
     m, n = size(A)
     start_time = time()
@@ -313,3 +267,4 @@ function experimentation_EI3()
 end
 
 println("\n'livrableEI3.jl' 已加载。包含贪婪修复和逻辑交叉算子。")
+
