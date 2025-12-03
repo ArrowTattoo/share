@@ -21,9 +21,47 @@ class construction{
     public void constructionReseau(Scanner filename){
         
 
+
+
+        for (int i = 0; i <= m; i++) {
+            for (int j = 0; j <=n; j++) {
+                double val = sc.nextDouble();
+                int node = i * n + j+1;
+                    addEdge(this.s, node,0, val);
+            }
+        }
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j <n; j++) {
+                double val = sc.nextDouble();
+                int node = i * n + j+1;
+                    addEdge(node,this.t,0, val);
+            }
+        }
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n - 1; j++) {
+                double p = sc.nextDouble();
+                int u = i * n + (j+1);       
+                int v = i * n + (j+2); 
+                addEdge(u, v,0, p);
+                addEdge(v, u,0, p);
+                }
+            }
+        }
+
+        for (int i = 0; i < m-1; i++) {
+            for (int j = 0; j < n; j++) {
+                double p = sc.nextDouble();
+                int u = i * n + (j+1);       
+                int v = (i+1) * n + (j+1); 
+                addEdge(u, v,0, p);
+                addEdge(v, u,0, p);
+            }
+        }
     }
 
-
-
 }
+
+
+
 
