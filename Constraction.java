@@ -18,6 +18,12 @@ class construction{
             reseau.add(new ArrayList<>);
         }
     }
+    public void addEdge(int src,int des,int dirct,double cap){
+        Edge down = new Edge(src des,0,cap);
+        Edge up = new Edge (des,src,1,0);
+        down.rev=up;
+        up.rev=down;
+    }
     public void constructionReseau(Scanner filename){
         
 
@@ -45,9 +51,9 @@ class construction{
                 int v = i * n + (j+2); 
                 addEdge(u, v,0, p);
                 addEdge(v, u,0, p);
-                }
             }
         }
+    
 
         for (int i = 0; i < m-1; i++) {
             for (int j = 0; j < n; j++) {
@@ -58,6 +64,36 @@ class construction{
                 addEdge(v, u,0, p);
             }
         }
+    
+    private boolean bfs(Edge[] tmp) {
+        for (int i = 0; i < numNode; i++) {
+            tmp[i] = null;
+        }
+        boolean[] visit = new boolean[numNode];
+        List<Integer> l= new ArrayList<>();
+        l.add(this.s);
+        visit[this.s] = true;  
+
+        while (!l.isEmpty()) {
+            int u = l.remove(0); 
+            for (Edge e : reseau.get(u)) {
+                int v = e.des;
+                if (!visit[v] && (e.cap - e.flow > 0)) {
+                    tmp[v] = e;
+                    visit[v] = true;
+                    l.add(v);
+                    if (v == t) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    public 
+
+    public void CalculCoupeMin(){
+
     }
 
 }
