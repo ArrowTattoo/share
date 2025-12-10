@@ -18,10 +18,4 @@ class Edge{
     this.flow=0;
     this.rev=null;
   }
-  public void addEdge(int src,int des,int dirct,double cap){
-    Edge down = new Edge(src des,0,cap);
-    Edge up = new Edge (des,src,1,0);
-    down.rev=up;
-    up.rev=down;
-  }
 }
