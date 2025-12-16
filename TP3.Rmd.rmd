@@ -1,0 +1,336 @@
+---
+title: "TP3"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+
+
+
+
+```{r}
+install.packages("palmerpenguins")
+install.packages("kernlab")
+install.packages("FactoMineR")
+install.packages("factoextra")
+install.packages("ggplot2")
+```
+
+第一题
+
+K-means 聚类 (企鹅数据集)
+
+```{r}
+library(palmerpenguins)
+library(ggplot2)
+```
+
+```{r}
+data("penguins")
+```
+
+# 1. 识别变量类型 [cite: 9]
+# 查看数据结构
+
+```{r}
+str(penguins)
+```
+# 定性变量 (Qualitative): species, island, sex
+# 定量变量 (Quantitative): bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g
+
+# 2. 数据清洗：删除缺失值 [cite: 10]
+
+```{r}
+penguins_clean <- na.omit(penguins)
+head(penguins_clean)
+```
+
+3. 提取定量变量用于聚类
+
+```{r}
+penguins_num <- penguins_clean[, c("bill_length_mm", "bill_depth_mm", 
+                                   "flipper_length_mm", "body_mass_g")]
+head(penguins_num)
+```
+
+
+
+# 4. 标准化数据 [cite: 12]
+
+```{r}
+penguins_scaled <- scale(penguins_num)
+head(penguins_scaled)
+```
+
+
+# 5. 执行 K-means 聚类 (k=3, nstart=25) [cite: 13]
+
+```{r}
+set.seed(123) # 设置随机种子以保证结果可复现
+km_res <- kmeans(penguins_scaled, centers = 3, nstart = 25)
+
+km_res
+```
+
+# 6. 可视化聚类结果 [cite: 14, 15]
+# 将聚类结果添加到数据框中
+
+```{r}
+penguins_clean$cluster <- as.factor(km_res$cluster)
+
+penguins_clean
+```
+
+# 绘制散点图 (例如：喙长 vs 喙深)
+
+```{r}
+ggplot(penguins_clean, aes(x = bill_length_mm, y = bill_depth_mm, color = cluster)) +
+  geom_point() +
+  ggtitle("K-means Clustering Results") +
+  theme_minimal()
+```
+
+1. ggplot(penguins_clean, aes(...))：铺设画布与地基
+这是绘图的初始化步骤，它定义了数据源和坐标映射。
+
+penguins_clean：告诉 R，我要画图的数据存放在这个表格里。
+
+aes(...)（Aesthetics 的缩写，意为“美学映射”）：这是最关键的部分，它决定了数据列如何对应到图形的属性上：
+
+x = bill_length_mm：表格里的“嘴喙长度”这一列，映射到 X 轴。
+
+y = bill_depth_mm：表格里的“嘴喙厚度”这一列，映射到 Y 轴。
+
+color = cluster：核心点！ 表格里的 cluster（聚类结果）这一列，用来决定点的 颜色。这样不同类别的企鹅就会显示成不同的颜色。
+
+2. geom_point()：决定画什么图形
+geom 代表“几何对象”（Geometric object）。
+
+point 代表“点”。
+
+作用：告诉 ggplot，请用**散点（Dots）**的形式把刚才定义的 X 和 Y 画出来。如果没有这一行，你只会得到一个空的坐标轴，上面什么都没有。
+
+3. ggtitle("...")：加个标题
+作用：在图表的顶部添加标题 "K-means Clustering Results"，让你知道这张图是干嘛的。
+
+4. theme_minimal()：美颜
+作用：ggplot2 默认的背景是灰色的带格子的。theme_minimal() 是一个内置的主题，它会去除灰色背景，把图表变得简洁、白底、干净，适合写报告或论文使用。
+
+5. + 号：连接符
+注意：你看到的每一行代码末尾的 + 是必不可少的。它的意思是“在此图层基础上，再叠加下一个图层”。
+
+
+问题2
+
+层次聚类
+# 计算距离矩阵 (欧几里得距离)
+
+```{r}
+dis_mat = dist(penguins_scaled)
+dis_mat
+```
+
+三种方法
+
+计算最远的距离
+```{r}
+hc_complete <- hclust(dis_mat, method = "complete")
+hc_complete
+```
+方差增加量最小化
+```{r}
+hc_ward= hclust(dis_mat, method = "ward.D2")
+hc_ward
+```
+
+平均连接法
+
+```{r}
+hc_average = hclust(dis_mat, method = "average")
+hc_average
+```
+
+绘制树状图
+```{r}
+par(mfrow = c(1, 3)) # 设置画布为 1 行 3 列
+plot(hc_complete, main = "Complete Linkage", xlab = "", sub = "")
+plot(hc_ward, main = "Ward Linkage", xlab = "", sub = "")
+plot(hc_average, main = "Average Linkage", xlab = "", sub = "")
+par(mfrow = c(1, 1)) # 恢复画布
+```
+
+# === 3. 切割树状图获取聚类 ===
+# 将树切割成 3 类 [cite: 23]
+
+```{r}
+grp_complete <- cutree(hc_complete, k = 3)
+grp_ward     <- cutree(hc_ward, k = 3)
+grp_average  <- cutree(hc_average, k = 3)
+```
+
+# 比较不同方法的结果 (例如通过 table 查看分布)
+
+```{r}
+table(grp_complete, grp_ward)
+```
+
+# === 4. 谱聚类 (Spectral Clustering) ===
+
+```{r}
+library(kernlab)
+```
+
+# 使用 specc 函数，centers = 3 [cite: 25]
+# 注意：谱聚类计算量较大，可能需要一点时间
+
+```{r}
+sc_res <- specc(penguins_scaled, centers = 3)
+sc_res
+```
+
+# 获取谱聚类的分类标签
+
+```{r}
+sc_clusters <- as.numeric(sc_res)
+sc_clusters
+```
+
+# === 5. 可视化谱聚类 ===
+# 使用两个变量绘图并着色 [cite: 27]
+
+```{r}
+plot(penguins_scaled[, 1], penguins_scaled[, 2], 
+     col = sc_clusters, 
+     pch = 19, 
+     main = "Spectral Clustering Results",
+     xlab = "Bill Length", ylab = "Bill Depth")
+```
+
+# 对比 K-means 和谱聚类
+
+```{r}
+table(Kmeans = km_res$cluster, Spectral = sc_clusters)
+```
+如果每一行都有一个特别大的数字（主导），而其他数字很小（接近 0），说明聚类效果非常好，算法成功把不同物种分开了。
+
+如果数字分布很分散（例如 Cluster 1 里有 50 个 Adelie 和 50 个 Chinstrap），说明算法没能区分这两个物种。
+
+
+第三题(CA和MCA)
+
+```{r}
+library(FactoMineR)
+library(factoextra) # 用于更美观的可视化
+```
+
+# === 1. 简单对应分析 (CA) - HairEyeColor ===
+
+```{r}
+data("HairEyeColor")
+```
+
+```{r}
+HairEyeColor
+```
+
+
+
+# 创建不包含 Sex 变量的列联表 (Contingency Table) [cite: 35]
+# HairEyeColor 是一个 3 维数组 (Hair, Eye, Sex)，我们需要在该维度上求和
+
+```{r}
+ct_table <- apply(HairEyeColor, c(1, 2), sum)
+ct_table
+```
+
+# 或者使用 
+
+```{r}
+margin.table(HairEyeColor, c(1, 2))
+```
+
+# 执行对应分析 [cite: 36]
+
+```{r}
+res_ca <- CA(ct_table, graph = FALSE)
+res_ca
+```
+
+# 总结结果 (特征值、方差解释率) [cite: 37]
+```{r}
+summary(res_ca)
+```
+
+
+```{r}
+# 1. 确保安装了包
+if(!require(factoextra)) install.packages("factoextra")
+
+# 2. 加载包 (这一步非常重要)
+library(factoextra)
+
+# 3. 再次尝试运行 biplot
+fviz_ca_biplot(res_ca, repel = TRUE, title = "CA Biplot")
+```
+# 可视化 Biplot [cite: 38]
+# 解释：距离近的点表示具有较强的关联性
+
+```{r}
+fviz_ca_biplot(res_ca, repel = TRUE, title = "CA Biplot: Hair vs Eye Color")
+```
+
+# === 2. 多重对应分析 (MCA) - mtcars ===
+
+```{r}
+data("mtcars")
+```
+
+# 准备数据：将分类变量转换为因子 (Factor) [cite: 40]
+# mtcars 原始全是数值，必须把代表类别的列转为 factor
+
+```{r}
+mca_data <- mtcars
+cols_to_factor <- c("cyl", "vs", "am", "gear", "carb")
+mca_data[cols_to_factor] <- lapply(mca_data[cols_to_factor], as.factor)
+```
+
+# 执行 MCA [cite: 40]
+# 注意：我们只对分类变量做 MCA，或者将定量变量设为补充变量 (quanti.sup)。
+# 这里为了演示，我们只选刚才转换的那 5 列分类变量进行分析：
+
+```{r}
+mca_active <- mca_data[, cols_to_factor]
+res_mca <- MCA(mca_active, graph = FALSE)
+```
+
+
+```{r}
+summary(res_mca)
+```
+
+# 可视化 Biplot [cite: 41]
+
+```{r}
+fviz_mca_biplot(res_mca, 
+                repel = TRUE, 
+                ggtheme = theme_minimal(),
+                title = "MCA Biplot: mtcars categorical variables")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

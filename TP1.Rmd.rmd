@@ -1,0 +1,341 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+#第一题
+
+v1 = 1:20
+v2 = sample(1:20, size = length(v1), replace = TRUE)
+v1[v1<5]=0
+v2[v2<5]=0
+sum(v1)
+mean(v1)
+median(v1)
+sd(v1)
+v1*v2
+
+M1 = matrix(1:25, nrow = 5, ncol = 5, byrow = TRUE)
+M1
+M2 = matrix(sample(1:20, size = length(M1), replace = TRUE), nrow = 5, ncol = 5, byrow = TRUE)
+M2
+matrix(c(1,2,3),2,4)
+M1[2,3]
+M1[2,]
+M1[,3]
+
+#转置(transpose):
+
+M1t = t(M1)
+M1t
+
+#计算矩阵的迹(trace)
+
+trace = sum(diag(M1t))
+trace
+
+rowMeans(M2)
+
+colMeans(M2)
+
+#apply 函数, 第二个元素1代表每行操作,2代表每列操作.
+
+apply(M2, 1, min)
+
+apply(M1, 2 ,min)
+
+#第二题
+
+#round 可以保留小数, runif 可以取随机小数
+
+df = data.frame(id = c(1:100), age = sample(18:30,size = 100, replace = TRUE), 
+height = round(runif(100, min = 150, max = 200),2))
+
+head(df)
+
+weight = round(runif(100, min = 50, max = 100),2)
+weight
+
+df$weight = weight
+head(df)
+
+df$BMI = round(df$weight/((df$height/100)^2),2)
+head(df)
+
+apply(df , 2 , mean)
+
+plot(df$height, df$weight, col = df$BMI, 
+pch = 16, 
+main = "BMI colour", 
+xlab = "height", 
+ylab = "weight")
+
+#rnorm:生成遵循正态分布的随机数,需要设定数量,平均值和标准差
+
+X = data.frame(
+D1= rnorm(100, mean = 1, sd = 2),
+D2= rnorm(100, mean = 4, sd = 0.4),
+group = "X"
+)
+
+Y = data.frame(
+D1= rnorm(100, mean = 3, sd = 0.7),
+D2= rnorm(100, mean = 1, sd = 1.2),
+group = "Y"
+)
+
+groupMap = c("X" = "red" , "Y" = "green")
+
+# 使用 rbind() 按行合并 X 和 Y
+Z <- rbind(X, Y)
+
+plot(Z$D1, Z$D2, 
+main = "Z", 
+xlab="D1", 
+ylab="D2",
+pch=16,
+col = groupMap[Z$group])
+
+#第三题 距离度量(Distance Metrics)
+
+Z
+
+
+
+indi = sample(1:nrow(Z),2)
+indi
+
+rowUn = Z[indi[1],1:2]
+rowDeux = Z[indi[2],1:2]
+
+rowUn
+rowDeux
+
+#欧氏距离(sqrt()是求平方根, abs()是求绝对值):
+
+euDistance12 = sqrt(sum((rowUn-rowDeux)^2))
+euDistance12
+
+manhaDis12=sum(abs(rowUn-rowDeux))
+manhaDis12
+
+#dist()函数,自动计算所有点之间的欧氏距离,在后面加 method = "manhattan"是曼哈顿距离, "minkowski"是雪切夫距离.
+
+disZEX=Z[,1:2]
+disZEX
+
+disZ = dist(disZEX)
+disZ
+
+class(disZ)
+
+dim(disZ)
+
+length(disZ)
+
+#as.matrix 转换标准矩阵, heatmap 绘制热力图, image 也可以绘制但是没有聚类排序
+
+disMatrix = as.matrix(disZ)
+disMatrix
+
+heatmap(disMatrix, main = "distance matrix", symm = TRUE)
+
+#对称矩阵对角线是0, 先找最大
+
+maxMatrix = max(disMatrix)
+maxMatrix
+
+#which用来寻找索引的,arr.ind = TRUE意思是返回坐标
+
+farPoint = which(disMatrix == maxMatrix, arr.ind = TRUE)
+farPoint
+
+matrixShort = disMatrix
+diag(matrixShort) = NA
+matrixShort
+
+minMatrix = min(matrixShort,na.rm = TRUE)
+minMatrix
+
+shortPoint = which(matrixShort == minMatrix, arr.ind = TRUE)
+shortPoint
+
+
+#建立马氏距离的函数(马氏距离更适合对比不同单位的数据,如身高与体重,普通的的欧氏矩阵会被数值带偏.)
+
+
+distanceMat = function(x,y,M){
+x = as.numeric(x)
+y = as.numeric(y)
+difVector=x-y
+distSQ=t(difVector)%*%M%*%difVector
+return(sqrt(drop(distSQ)))
+}
+
+varianceZ=apply(disZEX,2,var)
+varianceZ
+
+Mcorr=diag(1/varianceZ)
+
+distanceMat(disZEX[7,],disZEX[23,],Mcorr)
+
+Mcorr
+disZEX[7,]
+disZEX[23,]
+
+#定义惯量函数, 计算惯量(惯量是围绕着重心(平均值)的离散程度或者总变异)
+
+inertie = function(X,M){
+g=apply(X,2,mean)
+totalInertia=0
+n=nrow(X)
+for(i in 1:n){
+xi=X[i,]
+d=distanceMat(xi,g,M)
+totalInertia=totalInertia+d^2
+}
+return(totalInertia)
+}
+
+#欧氏距离下的惯量
+
+euMatirx = diag(1,ncol(disZEX))
+euMatirx
+
+inertie(disZEX,euMatirx)
+
+#需要方差和方差矩阵,可以用标准化数据算出更合理的惯量
+
+varianceZ
+Mcorr
+
+inertie(disZEX,Mcorr)
+
+
+#第四题
+
+#执行PCA, scale=TRUE 表示在分析前对数据进行标准化,均值为,方差为1,这是PCA的标准操作.
+
+#PCA运算过程: 先标准化, 然后求协方差矩阵,然后计算特征值,然后计算特征向量,然后计算得分.
+
+resPCA = prcomp(disZEX, center = TRUE, scale.=TRUE)
+
+resPCA
+
+#分析方差
+
+summary(resPCA)
+
+sumM=summary(resPCA)
+sumM
+
+cumVar = sumM$importance[3,]
+cumVar
+
+nb1er90=which(cumVar>=0.9)[1]
+nb1er90
+
+
+#绘制个体图像
+
+point_colors <- ifelse(original_class == "X", "red", "blue")
+
+names(Z)
+
+#给XY分类
+
+original_class = Z$group
+
+point_colors = ifelse(original_class == "X", "red", "blue")
+
+
+plot(resPCA$x[,1],resPCA$x[,2],
+col = point_colors,
+pch=16,
+xlab="PC1",
+ylab="PC2",
+main="个体图表"
+)
+
+abline(h = 0, v = 0, lty = 2, col = "gray")#绘制水平垂直的虚线
+
+legend("topright",             # 图例位置
+       legend = c("X", "Y"),   # 标签
+       col = c("red", "blue"), # 对应的颜色
+       pch = 19)               # 对应的形状
+
+#绘制变量图
+
+plot(resPCA$rotation,
+type="n",
+xlim=c(-1,1),
+ylim=c(-1,1),
+xlab="PC1",
+ylab="PC2",
+main="variable plot"
+)
+abline(h = 0, v = 0, lty = 2, col = "gray")
+arrows(x0 = 0, y0 = 0, 
+       x1 = resPCA$rotation[, 1], 
+       y1 = resPCA$rotation[, 2], 
+       col = "red", 
+       length = 0.1) # 箭头头部的长度
+text(resPCA$rotation[, 1], resPCA$rotation[, 2], 
+     labels = rownames(resPCA$rotation), 
+     col = "darkred", 
+     pos = 3) # pos=3 表示文字在点上方
+
+#数据重构与计算误差(Reconstruction Error)
+
+# A. 提取前两个主成分的得分 (Scores) 和 载荷 (Loadings)
+
+scores = resPCA$x[,1:2]
+scores
+
+loading = resPCA$rotation[,1:2]
+loading
+
+# B. 进行矩阵乘法逆向还原
+# 公式: X_approx = Scores * t(Loadings)
+reconScaled <- scores%*%t(loading)
+reconScaled
+
+# C. 反标准化 (Un-scale and Un-center)
+# 因为我们在 prcomp 中用了 scale.=TRUE 和 center=TRUE，
+# 还原出来的数据是标准化后的，必须乘回标准差并加上均值。
+
+scaleVec=resPCA$scale
+scaleVec
+
+centerVec=resPCA$center
+centerVec
+
+# 使用 t() 操作将标准差和均值应用回每一列
+
+reconFinal = t(t(reconScaled)*scaleVec+centerVec)
+reconFinal
+
+# D. 计算均方误差 (MSE)
+# 将原始数据 Z 转为矩阵以便计算
+
+matrixZ = as.matrix(disZEX)
+mse = mean((matrixZ - reconFinal)^2)
+mse
+
+
+
+
+
